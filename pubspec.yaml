@@ -1,7 +1,7 @@
 name: flutter_meiqia
 description: A Flutter plugin allowing developers to use the MeiQia.
 version: 0.0.1
-author: NightWolvesKing
+author: NightWolvesKing <nightwlovesking@gmail.com>
 homepage: https://github.com/NightWolvesKing/flutter_meiqia
 
 environment:
