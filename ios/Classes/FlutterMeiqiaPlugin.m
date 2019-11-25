@@ -2,116 +2,68 @@
 #import <MeiQiaSDK/MeiQiaSDK.h>
 #import <MQChatViewManager.h>
 @implementation FlutterMeiqiaPlugin
+
+
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
       methodChannelWithName:@"flutter_meiqia"
             binaryMessenger:[registrar messenger]];
   FlutterMeiqiaPlugin* instance = [[FlutterMeiqiaPlugin alloc] init];
+  // --- add applicationDelegate自己添加
+  [registrar addApplicationDelegate:instance];
+  // --- 自己添加
   [registrar addMethodCallDelegate:instance channel:channel];
-    
-    #pragma mark  集成第一步: 初始化,  参数:appkey  ,尽可能早的初始化appkey.
-    [MQManager initWithAppkey:@"4e9af9c6e9fb0cf1274ae34b2a952ddd" completion:^(NSString *clientId, NSError *error) {
-        if (!error) {
-            NSLog(@"美洽 SDK：初始化成功");
-        } else {
-            NSLog(@"error:%@",error);
-        }
-    }];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"getPlatformVersion" isEqualToString:call.method]) {
     result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
   }
-  else if([@"getPlatformMeiQia" isEqualToString:call.method]){
+  else if([@"initMeiQia" isEqualToString:call.method]){
+      //初始化美洽
+      [self initMeiQia:call.arguments result:result];
+  }
+  else if([@"openMeiQia" isEqualToString:call.method]){
       //调用美洽
-      MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-      [chatViewManager setoutgoingDefaultAvatarImage:[UIImage imageNamed:@"meiqia-icon"]];
-      [chatViewManager pushMQChatViewControllerInViewController:self];
-      result(@"iOS MEIQIA ok");
+      [self openMeiQiaChat:call.arguments];
   }
   else {
     result(FlutterMethodNotImplemented);
   }
 }
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    #pragma mark  集成第一步: 初始化,  参数:appkey  ,尽可能早的初始化appkey.
-    [MQManager initWithAppkey:@"4e9af9c6e9fb0cf1274ae34b2a952ddd" completion:^(NSString *clientId, NSError *error) {
+#pragma mark  集成第一步: 初始化,  参数:appkey  ,尽可能早的初始化appkey.
+- (void)initMeiQia:(NSString *) appKey result:(FlutterResult)result{
+    [MQManager initWithAppkey:appKey completion:^(NSString *clientId, NSError *error) {
         if (!error) {
             NSLog(@"美洽 SDK：初始化成功");
-            MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-            [chatViewManager setoutgoingDefaultAvatarImage:[UIImage imageNamed:@"meiqia-icon"]];
-            [chatViewManager pushMQChatViewControllerInViewController:self];
         } else {
             NSLog(@"error:%@",error);
         }
     }];
-    /*你自己的代码*/
-    return YES;
 }
 
-- (void)applicationWillEnterForeground:(UIApplication *)application {
-#pragma mark  集成第二步: 进入前台 打开meiqia服务
-    [MQManager openMeiqiaService];
-}
-- (void)applicationDidEnterBackground:(UIApplication *)application {
-#pragma mark  集成第三步: 进入后台 关闭美洽服务
-    [MQManager closeMeiqiaService];
-}
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-#pragma mark  集成第四步: 上传设备deviceToken
-    [MQManager registerDeviceToken:deviceToken];
-}
-#pragma mark  集成第五步: 跳转到聊天界面(button的点击方法)
-- (void)pushToMeiqiaVC:(UIButton *)button {
-#pragma mark 总之, 要自定义UI层  请参考 MQChatViewStyle.h类中的相关的方法 ,要修改逻辑相关的 请参考MQChatViewManager.h中相关的方法
+
+- (void)openMeiQiaChat:(FlutterMethodCall *)call {
+    UIViewController *viewController = [UIApplication sharedApplication].delegate.window.rootViewController;
     
-#pragma mark  最简单的集成方法: 全部使用meiqia的,  不做任何自定义UI.
     MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
+    if (call.arguments) {
+        if (call.arguments[@"userInfo"]) {
+            if (call.arguments[@"isUpdate"]) {
+                //override 是否强制更新，如果不设置此值为 YES，设置只有第一次有效。
+                [chatViewManager setClientInfo:call.arguments[@"userInfo"]override:(YES)];
+            }else{
+                [chatViewManager setClientInfo:call.arguments[@"userInfo"]];
+            }
+            
+        }
+        if (call.arguments[@"id"]) {
+            [chatViewManager setLoginCustomizedId:call.arguments[@"id"]];
+        }
+    }
+    
     [chatViewManager setoutgoingDefaultAvatarImage:[UIImage imageNamed:@"meiqia-icon"]];
-    [chatViewManager pushMQChatViewControllerInViewController:self];
-#pragma mark  觉得返回按钮系统的太丑 想自定义 采用下面的方法
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    //    MQChatViewStyle *aStyle = [chatViewManager chatViewStyle];
-    //    [aStyle setNavBarTintColor:[UIColor redColor]];
-    //    [aStyle setNavBackButtonImage:[UIImage imageNamed:@"meiqia-icon"]];
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
-#pragma mark 觉得头像 方形不好看 ,设置为圆形.
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    //    MQChatViewStyle *aStyle = [chatViewManager chatViewStyle];
-    //    [aStyle setEnableRoundAvatar:YES];
-    //    [aStyle setEnableOutgoingAvatar:NO]; //不显示用户头像
-    //    [aStyle setEnableIncomingAvatar:NO]; //不显示客服头像
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
-#pragma mark 导航栏 右按钮 想自定义 ,但是不到万不得已,不推荐使用这个,会造成meiqia功能的缺失,因为这个按钮 1 当你在工作台打开机器人开关后 显示转人工,点击转为人工客服. 2在人工客服时 还可以评价客服
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    //    MQChatViewStyle *aStyle = [chatViewManager chatViewStyle];
-    //    UIButton *bt = [UIButton buttonWithType:UIButtonTypeCustom];
-    //    [bt setImage:[UIImage imageNamed:@"meiqia-icon"] forState:UIControlStateNormal];
-    //    [aStyle setNavBarRightButton:bt];
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
-#pragma mark 客户自定义信息
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    ////    [chatViewManager setClientInfo:@{@"name":@"123测试",@"gender":@"man11",@"age":@"100"} override:YES];
-    //    [chatViewManager setClientInfo:@{@"name":@"123测试",@"gender":@"man11",@"age":@"100"}];
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
-    
-#pragma mark 预发送消息
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    //    [chatViewManager setPreSendMessages: @[@"我想咨询的订单号：【1705045496811】"]];
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
-    
-#pragma mark 如果你想绑定自己的用户系统 ,当然推荐你使用 客户自定义信息来绑定用户的相关个人信息
-#pragma mark 切记切记切记  一定要确保 customId 是唯一的,这样保证  customId和meiqia生成的用户ID是一对一的
-    //    MQChatViewManager *chatViewManager = [[MQChatViewManager alloc] init];
-    //    NSString *customId = @"获取你们自己的用户ID 或 其他唯一标识的";
-    //    if (customId){
-    //        [chatViewManager setLoginCustomizedId:customId];
-    //    }else{
-    //   #pragma mark 切记切记切记 下面这一行是错误的写法 , 这样会导致 ID = "notadda" 和 meiqia多个用户绑定,最终导致 对话内容错乱 A客户能看到 B C D的客户的对话内容
-    //        //[chatViewManager setLoginCustomizedId:@"notadda"];
-    //    }
-    //    [chatViewManager pushMQChatViewControllerInViewController:self];
+    [chatViewManager pushMQChatViewControllerInViewController:viewController];
 }
 @end

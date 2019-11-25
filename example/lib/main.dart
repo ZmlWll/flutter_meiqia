@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
   }
   Future<void> initMeiQia() async {
     try {
-      res = await FlutterMeiqia.initMeiQia("你的appKey");
+      res = await FlutterMeiqia.initMeiQia("你自己的key");
     } on PlatformException {
       res = 'Failed to get init.';
     }
@@ -46,7 +46,8 @@ class _MyAppState extends State<MyApp> {
             ),
             FlatButton(
                 onPressed: () async {
-                   await FlutterMeiqia.openMeiQia();
+                  //562849003
+                   await FlutterMeiqia.openMeiQia(id: "576929681");
                 },
                 child: Text("打开客服")
             )

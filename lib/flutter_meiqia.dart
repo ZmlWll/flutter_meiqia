@@ -16,8 +16,8 @@ class FlutterMeiqia {
     return res;
   }
 
-  static Future<String> openMeiQia() async {
-    final String res = await _channel.invokeMethod('openMeiQia');
+  static Future<String> openMeiQia({String id,Map<String,String> userInfo,bool isUpdate}) async {
+    final String res = await _channel.invokeMethod('openMeiQia',{"id":id,"userInfo":userInfo,"isUpdate":isUpdate});
     return res;
   }
 }

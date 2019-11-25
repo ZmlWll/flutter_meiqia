@@ -10,6 +10,9 @@ import com.meiqia.meiqiasdk.util.MQIntentBuilder;
 import com.pangutiandi.flutter_meiqia.mq.MQGlideImageLoader4;
 import com.pangutiandi.flutter_meiqia.mq.MQManage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -52,11 +55,28 @@ public class FlutterMeiqiaPlugin implements MethodCallHandler {
     }
     else if (call.method.equals("openMeiQia")) {
       MQImage.setImageLoader(new MQGlideImageLoader4());
-      Intent intent = new MQIntentBuilder(registrar1.activity()).build();
-      registrar1.activity().startActivity(intent);
+      goToChat(call);
     }
     else {
       result.notImplemented();
     }
+  }
+
+  private void goToChat(MethodCall call) {
+    MQIntentBuilder builder = new MQIntentBuilder(registrar1.activity());
+    if (call.hasArgument("id")) {
+      builder.setCustomizedId((String) call.argument("id"));
+    }
+    if (call.arguments != null) {
+      if (call.hasArgument("userInfo")) {
+        if (call.hasArgument("isUpdate")) {
+          builder.updateClientInfo((HashMap<String, String>) call.argument("userInfo"));
+        }else{
+          builder.setClientInfo((HashMap<String, String>) call.argument("userInfo"));
+        }
+      }
+    }
+    Intent intent = builder.build();
+    registrar1.activity().startActivity(intent);
   }
 }
