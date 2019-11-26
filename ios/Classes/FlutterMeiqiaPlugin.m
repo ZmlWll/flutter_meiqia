@@ -9,9 +9,7 @@
       methodChannelWithName:@"flutter_meiqia"
             binaryMessenger:[registrar messenger]];
   FlutterMeiqiaPlugin* instance = [[FlutterMeiqiaPlugin alloc] init];
-  // --- add applicationDelegate自己添加
-  [registrar addApplicationDelegate:instance];
-  // --- 自己添加
+  
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
@@ -21,11 +19,11 @@
   }
   else if([@"initMeiQia" isEqualToString:call.method]){
       //初始化美洽
-      [self initMeiQia:call.arguments result:result];
+      [self initMeiQia:call.arguments[@"appKey"] result:result];
   }
   else if([@"openMeiQia" isEqualToString:call.method]){
       //调用美洽
-      [self openMeiQiaChat:call.arguments];
+      [self openMeiQiaChat:call];
   }
   else {
     result(FlutterMethodNotImplemented);
@@ -37,8 +35,10 @@
     [MQManager initWithAppkey:appKey completion:^(NSString *clientId, NSError *error) {
         if (!error) {
             NSLog(@"美洽 SDK：初始化成功");
+            result(@"美洽 SDK：初始化成功");
         } else {
             NSLog(@"error:%@",error);
+            result(@"美洽 SDK：初始化失败");
         }
     }];
 }
@@ -62,7 +62,10 @@
             [chatViewManager setLoginCustomizedId:call.arguments[@"id"]];
         }
     }
-    
+    //显示客服状态（比如：正在输入）
+    [chatViewManager enableEventDispaly:(true)];
+    //同步历史信息
+    [chatViewManager enableSyncServerMessage:(true)];
     [chatViewManager setoutgoingDefaultAvatarImage:[UIImage imageNamed:@"meiqia-icon"]];
     [chatViewManager pushMQChatViewControllerInViewController:viewController];
 }

@@ -13,6 +13,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String res = "未初始化";
+  String id = "";
   @override
   void initState() {
     super.initState();
@@ -20,7 +21,7 @@ class _MyAppState extends State<MyApp> {
   }
   Future<void> initMeiQia() async {
     try {
-      res = await FlutterMeiqia.initMeiQia("你自己的key");
+      res = await FlutterMeiqia.initMeiQia("4e9af9c6e9fb0cf1274ae34b2a952ddd");
     } on PlatformException {
       res = 'Failed to get init.';
     }
@@ -44,10 +45,21 @@ class _MyAppState extends State<MyApp> {
             Center(
               child: Text('Running on: $res\n'),
             ),
+            TextField(
+              onChanged: (s){
+                id = s;
+              },
+              controller: TextEditingController(text: id),
+            ),
             FlatButton(
                 onPressed: () async {
                   //562849003
-                   await FlutterMeiqia.openMeiQia(id: "576929681");
+                  Map<String,String> clientInfo = new Map();
+                  clientInfo["userId"] = "";
+                  clientInfo["订单ID"] = "";
+                  clientInfo["商品ID"] = "";
+
+                   await FlutterMeiqia.openMeiQia(id: "576929681",userInfo: clientInfo,isUpdate: true);
                 },
                 child: Text("打开客服")
             )
